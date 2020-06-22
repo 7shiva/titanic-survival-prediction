@@ -1,20 +1,46 @@
-import pandas as pd
 import utils
-from sklearn import linear_model, preprocessing
+import numpy as np
+import pandas as pd
+from sklearn import linear_model, preprocessing, model_selection
 
-train=pd.read_csv("train.csv")
+train = pd.read_csv("train.csv")
+test = pd.read_csv("test.csv")
+
+print ("\nCleaning up some data")
+
 utils.clean_data(train)
+utils.clean_data(test)
 
+print ("\nExtracting target and features")
+
+print(train.shape)
 target = train["Survived"].values
-feature_names = ["Pclass","Age","Fare","Embarked","Sex", "SibSp", "Parch"]
-features = train[feature_names].values
+features = train[["Pclass", "Age", "Sex", "Fare", "SibSp", "Parch", "Embarked"]].values
 
-classifier =linear_model.LogisticRegression()
-classifier_=classifier.fit(features,target)
-print(classifier_.score(features,target))
+print ("\nUse logistic regression")
 
+logistic = linear_model.LogisticRegression(max_iter=1000000)
+logistic.fit(features, target)
+print(logistic.score(features, target))
+
+scores = model_selection.cross_val_score(logistic, features, target, scoring='accuracy',cv=10)
+print (scores)
+print (scores.mean())
+
+test_features = test[["Pclass", "Age", "Sex", "Fare", "SibSp", "Parch", "Embarked"]].values
+utils.write_prediction(logistic.predict(test_features), "logistic_regression.csv")
+
+print ("\nUse polynomial features")
 poly = preprocessing.PolynomialFeatures(degree=2)
-poly_features=poly.fit_transform(features)
+features_ = poly.fit_transform(features)
 
-classifier_=classifier.fit(poly_features,target)
-print(classifier_.score(poly_features,target))
+clf = linear_model.LogisticRegression(C=10,max_iter=1000000)
+clf.fit(features_, target)
+print(clf.score(features_, target))
+
+scores = model_selection.cross_val_score(clf, features_, target, scoring='accuracy', cv=10)
+print (scores)
+print (scores.mean())
+
+test_features_ = poly.fit_transform(test_features)
+utils.write_prediction(clf.predict(test_features_), "logistic_regression_poly.csv")

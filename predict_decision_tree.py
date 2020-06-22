@@ -1,9 +1,12 @@
 import pandas as pd
+import numpy as np
 import utils
 from sklearn import tree, model_selection
 
 train=pd.read_csv("train.csv")
+test=pd.read_csv("test.csv")
 utils.clean_data(train)
+utils.clean_data(test)
 
 target = train["Survived"].values
 feature_names = ["Pclass","Age","Fare","Embarked","Sex", "SibSp", "Parch"]
